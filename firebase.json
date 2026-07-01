@@ -1,0 +1,26 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "tests/**",
+      "*.rules",
+      "*.md",
+      "*.bat",
+      "server.py",
+      "server.mjs",
+      "package.json",
+      "firebase-config.example.js"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|mjs|css|html|webmanifest)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  },
+  "firestore": { "rules": "firestore.rules" },
+  "storage": { "rules": "storage.rules" }
+}

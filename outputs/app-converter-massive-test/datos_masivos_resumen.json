@@ -1,0 +1,12 @@
+{
+  "archivo": "C:\\Users\\sebal\\OneDrive\\Escritorio\\Curso Python\\tipo de datos\\Curso-py\\app-converter-universal\\outputs\\app-converter-massive-test\\datos_masivos_movimientos.xlsx",
+  "movimientos": 10000,
+  "cargos_count": 5000,
+  "abonos_count": 5000,
+  "cargos_total": 20101897.8,
+  "abonos_total": 20097298.33,
+  "filas_sin_fecha": 0,
+  "detalles_sin_etiqueta": 0,
+  "filas_ruido": 0,
+  "bytes": 2871867
+}

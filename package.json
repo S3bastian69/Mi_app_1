@@ -1,0 +1,13 @@
+{
+  "name": "app-converter-universal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PWA local para convertir estados de cuenta PDF a Excel o CSV.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tests/run-tests.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

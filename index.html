@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#070b16" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://firebasestorage.googleapis.com; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'none'" />
+    <meta name="description" content="Convierte estados de cuenta PDF a Excel o CSV desde cualquier dispositivo." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="App Converter" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>App Converter</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="app-header">
+      <div class="header-content">
+        <a class="brand" href="./" aria-label="App Converter, inicio">
+          <img src="icons/icon.svg" alt="" width="42" height="42" />
+          <span>App Converter</span>
+        </a>
+        <div class="header-actions">
+          <span id="syncStatus" class="sync-status">Modo local</span>
+          <button id="installButton" class="button button-secondary hidden" type="button">Instalar aplicación</button>
+          <button id="authButton" class="button button-secondary" type="button">Iniciar sesión</button>
+          <button id="logoutButton" class="button button-secondary hidden" type="button">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="contenido" class="page-shell">
+      <section class="hero" aria-labelledby="mainTitle">
+        <div>
+          <p class="eyebrow">PDF a tablas, sin subir archivos</p>
+          <h1 id="mainTitle">Convierte tus estados de cuenta</h1>
+          <p class="hero-copy">Selecciona varios PDF y genera un archivo Excel o CSV desde tu teléfono o computadora.</p>
+        </div>
+        <div class="privacy-card" role="note">
+          <strong>Procesamiento privado</strong>
+          <span>Tus documentos permanecen en este dispositivo.</span>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Conversión de archivos">
+        <div class="card upload-card">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">1</span>
+            <div>
+              <h2>Selecciona los PDF</h2>
+              <p>Puedes agregar varios estados de cuenta a la vez.</p>
+            </div>
+          </div>
+
+          <div id="dropZone" class="drop-zone">
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <button id="selectButton" class="upload-select" type="button">Elige archivos PDF</button>
+            <span>o arrástralos aquí</span>
+            <small>Hasta 20 archivos de 50 MB cada uno</small>
+          </div>
+          <input id="fileInput" class="visually-hidden" type="file" accept="application/pdf,.pdf" multiple />
+
+          <div id="startupError" class="startup-error hidden" role="alert"></div>
+
+          <div id="fileSection" class="file-section hidden">
+            <div class="file-list-heading">
+              <h3>Archivos seleccionados</h3>
+              <button id="clearButton" class="text-button" type="button">Quitar todos</button>
+            </div>
+            <ul id="fileList" class="file-list" aria-label="Archivos seleccionados"></ul>
+          </div>
+        </div>
+
+        <div class="card options-card">
+          <div class="step-heading">
+            <span class="step-number" aria-hidden="true">2</span>
+            <div>
+              <h2>Elige el resultado</h2>
+              <p>Excel incluye movimientos y un resumen por archivo.</p>
+            </div>
+          </div>
+          <fieldset class="format-options">
+            <legend class="visually-hidden">Formato de salida</legend>
+            <label class="format-option">
+              <input type="radio" name="format" value="xlsx" checked />
+              <span><strong>Excel</strong><small>.xlsx, recomendado</small></span>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="csv" />
+              <span><strong>CSV</strong><small>.csv, archivo ligero</small></span>
+            </label>
+            <label class="format-option">
+              <input type="radio" name="format" value="both" />
+              <span><strong>Ambos</strong><small>Excel y CSV</small></span>
+            </label>
+          </fieldset>
+          <button id="convertButton" class="button button-primary button-large" type="button" disabled>Convertir archivos</button>
+          <fieldset id="cloudOptions" class="cloud-options hidden">
+            <legend>Guardar en mi cuenta</legend>
+            <label><input id="saveOriginal" type="checkbox" /> PDF originales</label>
+            <label><input id="saveResults" type="checkbox" checked /> Excel y CSV generados</label>
+            <small>La conversión ocurre primero en este dispositivo.</small>
+          </fieldset>
+          <p class="keyboard-hint">En computadora también puedes pulsar <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.</p>
+        </div>
+      </section>
+
+      <section id="progressSection" class="card progress-card hidden" aria-labelledby="progressTitle">
+        <div class="progress-heading">
+          <h2 id="progressTitle">Procesando archivos</h2>
+          <span id="progressPercent">0%</span>
+        </div>
+        <progress id="progressBar" max="100" value="0">0%</progress>
+        <p id="statusMessage" role="status" aria-live="polite">Preparando la conversión...</p>
+      </section>
+
+      <section id="resultSection" class="card results-card hidden" aria-labelledby="resultTitle">
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow success-text">Conversión terminada</p>
+            <h2 id="resultTitle">Tus archivos están listos</h2>
+            <p id="resultSummary"></p>
+          </div>
+          <div id="downloadButtons" class="download-buttons"></div>
+        </div>
+        <details>
+          <summary>Ver vista previa de los datos</summary>
+          <div class="table-scroll">
+            <table id="previewTable"></table>
+          </div>
+          <p class="preview-note">La vista previa muestra hasta 100 filas.</p>
+        </details>
+        <div id="warnings" class="warnings hidden" role="alert"></div>
+      </section>
+
+      <section id="installHelp" class="install-help hidden" aria-labelledby="installTitle">
+        <h2 id="installTitle">Instalar en iPhone o iPad</h2>
+        <p>En Safari, toca <strong>Compartir</strong> y después <strong>Agregar a pantalla de inicio</strong>.</p>
+      </section>
+
+      <section id="historySection" class="card history-card hidden" aria-labelledby="historyTitle">
+        <div class="history-heading">
+          <div>
+            <p class="eyebrow">Sincronización Firebase</p>
+            <h2 id="historyTitle">Mis conversiones</h2>
+            <p>Historial y archivos disponibles en todos tus dispositivos.</p>
+          </div>
+          <button id="refreshHistory" class="button button-secondary" type="button">Actualizar</button>
+        </div>
+        <div id="historyStatus" class="history-status" role="status" aria-live="polite"></div>
+        <ul id="historyList" class="history-list"></ul>
+      </section>
+    </main>
+
+    <dialog id="authDialog" class="auth-dialog" aria-labelledby="authTitle">
+      <form id="authForm">
+        <h2 id="authTitle">Entrar a App Converter</h2>
+        <p>Accede al mismo historial desde tu teléfono y computadora.</p>
+        <label for="authEmail">Correo electrónico</label>
+        <input id="authEmail" type="email" autocomplete="email" required />
+        <label for="authPassword">Contraseña</label>
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required />
+        <div id="authError" class="form-error hidden" role="alert"></div>
+        <div class="auth-actions">
+          <button id="authCancel" class="button button-secondary" type="button">Cancelar</button>
+          <button class="button button-primary" type="submit">Entrar</button>
+        </div>
+        <div class="auth-links">
+          <button id="registerButton" class="text-button" type="button">Crear una cuenta</button>
+          <button id="resetPasswordButton" class="text-button" type="button">Olvidé mi contraseña</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="passwordDialog" class="password-dialog" aria-labelledby="passwordTitle" aria-describedby="passwordMessage">
+      <form id="passwordForm">
+        <div class="dialog-icon" aria-hidden="true">PDF</div>
+        <h2 id="passwordTitle">Estado de cuenta protegido</h2>
+        <p id="passwordMessage">Escribe la contraseña proporcionada por tu banco.</p>
+        <label for="passwordInput">Contraseña del PDF</label>
+        <input id="passwordInput" type="password" autocomplete="off" required />
+        <p class="password-privacy">Se usa únicamente para abrir este archivo y no se guarda.</p>
+        <div class="dialog-actions">
+          <button id="passwordCancel" class="button button-secondary" type="button">Omitir archivo</button>
+          <button class="button button-primary" type="submit">Abrir PDF</button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer><span>App Converter</span><span aria-hidden="true">·</span><span>Funciona localmente y sin registro</span></footer>
+    <noscript>Necesitas activar JavaScript para convertir archivos PDF.</noscript>
+    <script src="firebase-config.js"></script>
+    <script src="vendor/firebase-app-compat.js"></script>
+    <script src="vendor/firebase-auth-compat.js"></script>
+    <script src="vendor/firebase-firestore-compat.js"></script>
+    <script src="vendor/firebase-storage-compat.js"></script>
+    <script src="firebase-cloud.js"></script>
+    <script src="vendor/xlsx.full.min.js"></script>
+    <script src="vendor/jszip.min.js"></script>
+    <script src="startup-check.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
